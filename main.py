@@ -21,22 +21,20 @@ def start_redrawAll(app):
     drawImage(app.selectorImage, 1280, 720, align='bottom-right')
     # draw the title image (at the left center of the screen)
     drawImage('image/PvZ_Logo.jpg', titleX, titleY, align='center')
-    # draw the subtitle and credit label
-    drawLabel('2025 Term Project', titleX, titleY + 78, size=30, fill='white', align='center', opacity=70, bold=True, italic=True)
-    drawLabel('by Kevin Meng', titleX, titleY + 108, align='center', size=15, fill='white', opacity=70, bold=True, italic=True)
+    # draw the subtitle
+    drawImage('image/subtitle.png', titleX, titleY + 100, width=550, height=100, align='center')
     # for debugging purposes, show the mouse coordinates
     drawLabel(f'Mouse: {app.mouseX}, {app.mouseY}', 20, app.height - 20, size=15, fill='white', align='bottom-left', opacity=60)
 
-
-
+# alternate way to go to chapters screen
 def start_onKeyPress(app, key):
     if key == 'space':
         setActiveScreen('chapters')
 
-
 def start_onMousePress(app, mouseX, mouseY):
-
-    pass
+    # check if the mouse has pressed the start button
+    if start_isOnStartButton(app, mouseX, mouseY):
+        setActiveScreen('chapters')
 
 def start_onMouseMove(app, mouseX, mouseY):
     # update the mouse coordinates in the app object
@@ -46,15 +44,27 @@ def start_onMouseMove(app, mouseX, mouseY):
     if start_isOnStartButton(app, mouseX, mouseY):
         # draw the highlighted start button
         app.selectorImage = 'image/SelectorScreen_withbutton_highlight.png'
+    else:
+        # draw the normal start button
+        app.selectorImage = 'image/SelectorScreen_withbutton.png'
+
 
 def start_isOnStartButton(app, mouseX, mouseY):
-    # Check if the mouse is within the bounds of the start button
-    buttonLeft = 830
-    buttonTop = 220
-    buttonWidth = 300
-    buttonHeight = 80
+    # topEdge -> y = 0.140625x+173.28125
+    # bottomEdge -> y = 0.0746269x + 158.0597
+    # leftEdge -> y = y=0.307229x
+    # rightEdge -> y = -6x + 7235
+    # top-left: (830, 220)
+    # top-right: (1165, 245)
+    # buttom-left: (830, 290)
+    # buttom-right: (1150, 335)
 
-    return (buttonLeft <= mouseX <= buttonLeft + buttonWidth) and (buttonTop <= mouseY <= buttonTop + buttonHeight)
+    # Check if the mouse is within the bounds of the start button
+    return (mouseY <= 0.140625*mouseX+173.28125) and \
+            (mouseY >= 0.0746269*mouseX + 158.0597) and \
+            (mouseX >= 830) and \
+            (mouseX <= (mouseY - 7235)/-6)
+
 
 ##############################
 # chapters screen
@@ -64,11 +74,11 @@ def chapters_onScreenActivate(app):
     app.selectedChapter = None
 
 def chapters_redrawAll(app):
-    drawLabel('Choose a chapter with your keyboard', app.width/2, 80, size=30, fill='black', bold=True)
+    drawLabel('Choose a level with your keyboard', app.width/2, 80, size=30, fill='white', bold=True)
     drawLabel('Press ESC to return to the start screen', app.width/2, 115, size=20, fill='black', opacity=70)
-    drawLabel('1. Chapter One', 100, 150, size=20, fill='black')
-    drawLabel('2. Chapter Two', 100, 200, size=20, fill='black')
-    drawLabel('3. Chapter Three', 100, 250, size=20, fill='black')
+    drawLabel('1. Chapter One', 100, 150, size=20, fill='white')
+    drawLabel('2. Chapter Two', 100, 200, size=20, fill='white')
+    drawLabel('3. Chapter Three', 100, 250, size=20, fill='white')
 
 def chapters_onKeyPress(app, key):
     if key == 'escape':
