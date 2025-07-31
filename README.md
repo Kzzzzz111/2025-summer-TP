@@ -11,6 +11,8 @@
 - Peashooter
 - Wall-nut
 - Snow Peashooter
+   - The deceleration function is not working yet.
+
 - Cherry Bomb (not included yet)
 
 #### Implement Zombies
