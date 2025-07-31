@@ -18,12 +18,14 @@ class NormalZombie:
         self.stop = False
         self.success = False  # Whether the zombie has reached the end of the lane
         self.dead = False
+        self.attacknum = 20
 
     def draw(self):
-        drawImage(f'{self.imageFolder}{self.imageIndex}.png', self.cx, self.cy, align='bottom')
+        if self.appear:
+            drawImage(f'{self.imageFolder}{self.imageIndex}.png', self.cx, self.cy, align='bottom')
 
     def update(self, app):
-        self.imageIndex = (app.timeIndex//2 + 1) % 21  # Loop through the zombie images
+        self.imageIndex = (app.timeIndex//2) % 21  # Loop through the zombie images
         # change status of the zombie based on its HP
         # if self.type == 'NormalZombie':
         #     if self.hp <= 0:

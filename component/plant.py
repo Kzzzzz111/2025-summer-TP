@@ -6,15 +6,98 @@ class Sunflower:
         self.appear = True
         # self.imageFolder = 'image/plants/SunFlower/SunFlower_' # There is only one folder for sunflower images
         self.imageIndex = 0
-        self.fallingSpeed = 0  # Sunflowers do not fall
         self.value = 25  # Amount of sun produced by sunflower
         self.cost = 50  # Cost to plant a sunflower
+        self.hp = 100
 
     def draw(self):
         drawImage(f'image/plants/SunFlower/SunFlower_{self.imageIndex}.png', self.cx, self.cy, align='bottom')
 
     def update(self, app):
-        self.imageIndex = (app.timeIndex//2 + 1) % 17  # Loop through the sunflower images
+        self.imageIndex = (app.timeIndex//2) % 17  # Loop through the sunflower images
 
     def produceSun(self, app):
         app.flowerSunAmount += self.value  # Increase the sun amount
+
+class PeaShooter:
+    def __init__(self, app, blockRow, blockCol):
+        self.cx, self.cy = app.board[blockRow][blockCol]  # Set the x and y coordinate based on the board layout
+        self.appear = True
+        # self.imageFolder = 'image/plants/PeaShooter/Peashooter_' # There is only one folder for peashooter images
+        self.imageIndex = 0
+        self.cost = 100  # Cost to plant a peashooter
+        self.shootspeed = 2 # two shots in a second
+        self.hp = 100
+    
+    def draw(self):
+        drawImage(f'image/plants/PeaShooter/Peashooter_{self.imageIndex}.png', self.cx, self.cy, align='bottom')
+
+    def update(self, app):
+        self.imageIndex = (app.timeIndex//2) % 12
+
+    # def shoots(self, app):
+
+class WallNut:
+    def __init__(self, app, blockRow, blockCol):
+        self.cx, self.cy = app.board[blockRow][blockCol]  # Set the x and y coordinate based on the board layout
+        self.appear = True
+        self.imageFolder = 'image/plants/WallNut/WallNut/WallNut_'
+        self.imageIndex = 0
+        self.cost = 50  # Cost to plant
+        self.shootspeed = 2 # two shots in a second
+        self.hp = 900
+        # self.hp = 500
+        # self.hp = 200
+    
+    def draw(self):
+        drawImage(f'{self.imageFolder}{self.imageIndex}.png', self.cx, self.cy, align='bottom')
+
+    def update(self, app):
+        if self.hp >= 600:
+            self.imageIndex = (app.timeIndex//2) % 15
+        elif 300 <= self.hp < 600:
+            self.imageFolder = 'image/plants/WallNut/WallNut_cracked1/WallNut_cracked1_'
+            self.imageIndex = (app.timeIndex//2) % 10
+        elif self.hp < 300:
+            self.imageFolder = 'image/plants/WallNut/WallNut_cracked2/WallNut_cracked2_'
+            self.imageIndex = (app.timeIndex//2) % 14
+
+class SnowPea:
+    def __init__(self, app, blockRow, blockCol):
+        self.cx, self.cy = app.board[blockRow][blockCol]  # Set the x and y coordinate based on the board layout
+        self.appear = True
+        # self.imageFolder = 'image/plants/SnowPea/SnowPea_' # There is only one folder for snowpeashooter images
+        self.imageIndex = 0
+        self.cost = 175  # Cost to plant
+        self.shootspeed = 2 # two shots in a second
+        self.hp = 100
+    
+    def draw(self):
+        drawImage(f'image/plants/SnowPea/SnowPea_{self.imageIndex}.png', self.cx, self.cy, align='bottom')
+
+    def update(self, app):
+        self.imageIndex = (app.timeIndex//2) % 14
+
+    # def shoots(self, app):
+
+class CherryBomb:
+    def __init__(self, app, blockRow, blockCol):
+        self.cx, self.cy = app.board[blockRow][blockCol]  # Set the x and y coordinate based on the board layout
+        self.appear = True
+        # self.imageFolder = 'image/plants/CherryBomb/CherryBomb_' # There is only one folder for snowpeashooter images
+        self.imageIndex = 0
+        self.cost = 175  # Cost to plant
+        self.shootspeed = 2 # two shots in a second
+        self.hp = 100
+        self.exploded = False
+    
+    def draw(self):
+        if self.imageIndex <= 6:
+            drawImage(f'image/plants/CherryBomb/CherryBomb_{self.imageIndex}.png', self.cx, self.cy, align='bottom')
+
+    def update(self, app):
+        # It will not work properly if we try to stop the image here
+        # Because draw runs a bunch of illegal moves before the update function stop the image
+        self.imageIndex = (app.timeIndex//10)
+
+

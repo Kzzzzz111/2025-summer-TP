@@ -2,6 +2,7 @@ from cmu_graphics import *
 from component.sun import *
 from component.zombie import *
 from component.plant import *
+from component.bullet import *
 import random
 
 ##############################
@@ -10,10 +11,11 @@ import random
 
 def game_onScreenActivate(app):
     app.stepsPerSecond = 20 # this controls the speed of the game, 20 ticks per second
-    app.stepsPerSecond = 1000 # for debugging purposes, set to 50 ticks per second
+    # app.stepsPerSecond = 1000 # for debugging purposes, set to 50 ticks per second
 
     app.playerLose = False  # Whether the player has lost the game
     app.sunAmount = 100  # Initial amount of sun
+    app.sunAmount = 1000 # for debugging purposes, set to 1000 initial sun
     app.flowerSunAmount = 0  # Amount of sun from sunflowers
     app.timeIndex = 0
 
@@ -30,9 +32,13 @@ def game_onScreenActivate(app):
 
     # Initialize plants
     app.holdingPlant = None  # No plant is being held initially
-    app.plantTypes = ['Sunflower', 'Peashooter', 'Wallnut', 'SnowPea', 'CherryBomb']
-    app.plantCosts = {'Sunflower':50, 'Peashooter':100, 'Wallnut':50, 'SnowPea':175, 'CherryBomb':150} # dictionary to hold the costs of each plant
+    app.plantTypes = ['Sunflower', 'PeaShooter', 'WallNut', 'SnowPea', 'CherryBomb']
+    app.plantCosts = {'Sunflower':50, 'PeaShooter':100, 'WallNut':50, 'SnowPea':175, 'CherryBomb':150} # dictionary to hold the costs of each plant
     app.plants = []  # List to hold planted plants
+
+    # Initialize bullets
+    app.bulletTypes = ['Normal', 'Snow']
+    app.bullets = []
 
 def game_redrawAll(app):
     # if chose 1
@@ -72,10 +78,10 @@ def game_redrawAll(app):
 
         # print sun from sunflowers
         drawRect(10, 165, 282, 40, align='left', fill='black', opacity=60)
-        drawLabel(f'Sun from Sunflowers: {app.flowerSunAmount}', 20, 165, align='left', fill='white', size=15, bold=True, border='black', borderWidth=1)
+        drawLabel(f'Sun from plants: {app.flowerSunAmount}', 20, 165, align='left', fill='white', size=18, bold=True, border='black', borderWidth=1)
         # draw the collect button
-        drawRect(282, 165, 81, 25, align='right', fill='red', opacity=60, border='white', borderWidth=1)
-        drawLabel('COLLECT', 277, 165, align='right', size=15, fill='white', bold=True)
+        drawRect(285, 165, 81, 25, align='right', fill='red', opacity=60, border='white', borderWidth=1)
+        drawLabel('COLLECT', 280, 165, align='right', size=15, fill='white', bold=True)
 
 
         ##############################
@@ -87,14 +93,12 @@ def game_redrawAll(app):
                 sun.draw()
             # draw the zombies
             for zombie in app.zombies:
-                if zombie.appear:
-                    zombie.draw()
-                    zombie.disappear()
+                zombie.draw()
             # draw the plants
             for plant in app.plants:
                 plant.draw()
         else:
-            drawRect(0, app.height//2-42, app.width, 120, fill='black', opacity=18)
+            drawRect(0, app.height//2-42, app.width, 120, fill='black', opacity=20)
             drawLabel('The zombies have eaten your brain!', app.width//2, app.height//2-10, size=50, fill='red', bold=True, border='black', borderWidth=1)
             drawLabel('Press ESC to return to the chapters screen', app.width//2, app.height//2 + 50, size=20, fill='white', bold=True)
         
@@ -120,6 +124,7 @@ def game_onStep(app): # instructions in each tick
             if not zombie.success:
                 zombie.update(app)
                 zombie.move()
+                zombie.disappear()
         # generate new zombies but limit to the number of the chapter limit (20 for chapter 1)
         if len(app.zombies) < 20:
             if app.timeIndex % 200 == 0:  # Every 200 steps， 10 seconds
@@ -158,13 +163,13 @@ def game_onMousePress(app, mouseX, mouseY):
         if 20 <= mouseY <= 85: # Seed bank area
             if 380 <= mouseX <= 430: # Sunflower
                 app.holdingPlant = 'Sunflower'
-            elif 432 <= mouseX <= 482: # Peashooter
-                app.holdingPlant = 'Peashooter'
-            elif 487 <= mouseX <= 535: # Wallnut
-                app.holdingPlant = 'Wallnut'
+            elif 432 <= mouseX <= 482: # PeaShooter
+                app.holdingPlant = 'PeaShooter'
+            elif 487 <= mouseX <= 535: # WallNut
+                app.holdingPlant = 'WallNut'
             elif 539 <= mouseX <= 589: # Snow Pea
                 app.holdingPlant = 'SnowPea'
-            elif 592 <= mouseX <= 641: # Cherry Bomb
+            elif 592 <= mouseX <= 641: # CherryBomb
                 app.holdingPlant = 'CherryBomb'
 
     else: # we are holding a plant
@@ -179,14 +184,14 @@ def game_onMousePress(app, mouseX, mouseY):
                 # Create a new plant based on the holding plant type
                 if app.holdingPlant == 'Sunflower':
                     newPlant = Sunflower(app, blockRow, blockCol)
-                # elif app.holdingPlant == 'Peashooter':
-                #     newPlant = Peashooter(app, blockRow, blockCol)
-                # elif app.holdingPlant == 'Wallnut':
-                #     newPlant = Wallnut(app, blockRow, blockCol)
-                # elif app.holdingPlant == 'SnowPea':
-                #     newPlant = SnowPea(app, blockRow, blockCol)
-                # elif app.holdingPlant == 'CherryBomb':
-                #     newPlant = CherryBomb(app, blockRow, blockCol)
+                elif app.holdingPlant == 'PeaShooter':
+                    newPlant = PeaShooter(app, blockRow, blockCol)
+                elif app.holdingPlant == 'WallNut':
+                    newPlant = WallNut(app, blockRow, blockCol)
+                elif app.holdingPlant == 'SnowPea':
+                    newPlant = SnowPea(app, blockRow, blockCol)
+                elif app.holdingPlant == 'CherryBomb':
+                    newPlant = CherryBomb(app, blockRow, blockCol)
 
                 # deduct the sun cost of the plant
                 app.sunAmount -= app.plantCosts[app.holdingPlant]
@@ -202,7 +207,7 @@ def game_onMousePress(app, mouseX, mouseY):
             break
     
     # collet sun from sunflower
-    if (201 <= mouseX <= 282) and (145 <= mouseY <= 185): # we are clicking the collect button
+    if (204 <= mouseX <= 285) and (145 <= mouseY <= 185): # we are clicking the collect button
         game_collectFlowerSun(app)
 
 def game_onMouseMove(app, mouseX, mouseY):
