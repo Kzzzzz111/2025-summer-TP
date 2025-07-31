@@ -7,6 +7,7 @@ class Bullet:
         self.cy = cy-35 # cy is the mid height of the selected block, the cy of the shooter
         self.imageAddress = 'image/bullets/PeaNormal/PeaNormal_0.png'
         self.attack = 10
+        self.attack = 50 # for debugging purposes
         self.appear = True
         self.hitZombie = False
         self.movingSpeed = 5
@@ -25,6 +26,6 @@ class Bullet:
     def disappear(self):
         self.appear = False
 
-    def hit(self, zombieCx):
-        if zombieCx-30 <= self.cx <= zombieCx - 10: # Incase the 20 ticks is not exact enough
-            self.hitZombie = True
+    def hit(self, zombieCx, zombieCy):
+        # print('hit!') # for debugging pupose
+        self.hitZombie = True

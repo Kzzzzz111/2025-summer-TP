@@ -21,8 +21,8 @@ class NormalZombie:
         self.attacknum = 20
 
     def draw(self):
-        if self.appear:
-            drawImage(f'{self.imageFolder}{self.imageIndex}.png', self.cx, self.cy, align='bottom')
+        drawImage(f'{self.imageFolder}{self.imageIndex}.png', self.cx, self.cy, align='bottom')
+        drawLabel(self.hp, self.cx+17, self.cy-130, fill='red', size=20, border='black', borderWidth=1)
 
     def update(self, app):
         self.imageIndex = (app.timeIndex//2) % 21  # Loop through the zombie images
@@ -35,13 +35,11 @@ class NormalZombie:
             self.dead = True
 
     def move(self):
-        if (not self.stop) or (not self.dead) or (not self.success): # if stop or dead, the zombie should not move
-            self.cx -= self.movingSpeed
+        self.cx -= self.movingSpeed
 
     # we don't remove the zombie from the list when it disappears, but we set its appear to False
     # so we can control the amount of zombies' appearance in the specific chapter
-    def disappear(self):
-        if self.cx < 225:
-            self.appear = False
-            self.success = True
+    def end(self): # if reach the end
+        self.appear = False
+        self.success = True
             

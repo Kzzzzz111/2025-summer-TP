@@ -11,7 +11,8 @@ import random
 
 def game_onScreenActivate(app):
     app.stepsPerSecond = 20 # this controls the speed of the game, 20 ticks per second
-    # app.stepsPerSecond = 1000 # for debugging purposes, set to 50 ticks per second
+    app.stepsPerSecond = 1000 # for debugging purposes, set to 50 ticks per second
+    app.paused = False
 
     app.playerLose = False  # Whether the player has lost the game
     app.sunAmount = 500  # Initial amount of sun
@@ -87,6 +88,10 @@ def game_redrawAll(app):
         drawRect(285, 165, 81, 25, align='right', fill=color, opacity=60, border='white', borderWidth=1)
         drawLabel('COLLECT', 280, 165, align='right', size=15, fill='white', bold=True)
 
+        # draw the pause sign
+        if app.paused:
+            drawLabel('PAUSED', app.width//2, app.height//2, size=50, fill='red', border='black', borderWidth=2)
+
 
         ##############################
         # game logic
@@ -97,7 +102,8 @@ def game_redrawAll(app):
                 sun.draw()
             # draw the zombies
             for zombie in app.zombies:
-                zombie.draw()
+                if zombie.appear:
+                    zombie.draw()
             # draw the plants
             for plant in app.plants:
                 plant.draw()
@@ -117,67 +123,73 @@ def game_redrawAll(app):
         drawLabel('Press ESC to go back', app.width//2, app.height//2+45, size=30, fill='white', bold=True, border='black', borderWidth=1)
 
 def game_onStep(app): # instructions in each tick
-    # check if the player has lost
-    for zombie in app.zombies:
-        if zombie.success:
-            app.playerLose = True
-            break
-    
-    if not app.playerLose:
-        app.timeIndex += 1
-
-        # update the zombies
+    if not app.paused:
+        # check if the player has lost
         for zombie in app.zombies:
-            zombie.update(app)
-            zombie.move()
-            zombie.disappear()
-        # generate new zombies but limit to the number of the chapter limit (20 for chapter 1)
-        if len(app.zombies) < 20:
-            if app.timeIndex % 200 == 0:  # Every 200 ticks， 10 seconds
-                zombie = NormalZombie(app, random.choice(app.zombieTypes))
-                app.zombies.append(zombie)
+            if zombie.success:
+                app.playerLose = True
+                break
         
-        # update the suns
-        for sun in app.suns:
-            if sun.appear and sun.cy < app.height: # still falling
-                sun.update(app)
-                sun.move()
-            else:
-                sun.update(app)
-        # generate natural suns
-        if app.timeIndex % 300 == 0:  # generate new natural sun every 300 ticks, 15 seconds
-            sun = Sun(app)
-            app.suns.append(sun)
+        if not app.playerLose:
+            app.timeIndex += 1
 
-        # update the plants
-        for plant in app.plants:
-            plant.update(app)
-            if isinstance(plant, Sunflower):
-                if app.timeIndex % 250 == 0: # Sunflowers produce sun every 250 ticks, 12.5 seconds
-                    plant.produceSun(app)
-        
-        # peashooters generate bullets
-        for plant in app.plants:
-            if isinstance(plant, PeaShooter): # PeaShooters shoot peas
-                if app.timeIndex % 100 == 0: # Every 100 ticks
-                    newBullet = Bullet(app, 'Normal', plant.cx, plant.cy)
-                    app.bullets.append(newBullet)
+            # update the zombies
+            for zombie in app.zombies:
+                zombie.update(app)
+                if app.timeIndex % 2 == 0:
+                    if (not zombie.stop) or (not zombie.dead) or (not zombie.success): # if stop or dead, the zombie should not move
+                        zombie.move() # move space every two ticks
+                if zombie.cx < 225:
+                    zombie.end()
+            # generate new zombies but limit to the number of the chapter limit (20 for chapter 1)
+            if len(app.zombies) < 20:
+                if app.timeIndex % 200 == 0:  # Every 200 ticks， 10 seconds
+                    zombie = NormalZombie(app, random.choice(app.zombieTypes))
+                    app.zombies.append(zombie)
+            
+            # update the suns
+            for sun in app.suns:
+                if sun.appear and sun.cy < app.height: # still falling
+                    sun.update(app)
+                    sun.move()
+                else:
+                    sun.update(app)
+            # generate natural suns
+            if app.timeIndex % 300 == 0:  # generate new natural sun every 300 ticks, 15 seconds
+                sun = Sun(app)
+                app.suns.append(sun)
 
-        # update the bullets
-        for bullet in app.bullets:
-            bullet.move()
-            for zombie in app.zombies: 
-                if not zombie.dead:# the checking process does not happen when it hit a dead zombie
-                    bullet.hit(zombie.cx) # check whether the bullet hit the zombie
-                    if bullet.hitZombie == True:
-                        zombie.hp -= 10 # deduct the HP
-                        break # already hit one zombie
-            bullet.update(app)
+            # update the plants
+            for plant in app.plants:
+                plant.update(app)
+                if isinstance(plant, Sunflower):
+                    if app.timeIndex % 250 == 0: # Sunflowers produce sun every 250 ticks, 12.5 seconds
+                        plant.produceSun(app)
+            
+            # peashooters generate bullets
+            for plant in app.plants:
+                if isinstance(plant, PeaShooter): # PeaShooters shoot peas
+                    if app.timeIndex % 100 == 0: # Every 100 ticks
+                        newBullet = Bullet(app, 'Normal', plant.cx, plant.cy)
+                        app.bullets.append(newBullet)
+
+            # update the bullets
+            for bullet in app.bullets:
+                if not bullet.hitZombie: # if the bullet is still fresh
+                    bullet.move()
+                    for zombie in app.zombies: 
+                        if not zombie.dead:# the checking process does not happen when it hit a dead zombie
+                            if (zombie.cx-10 <= bullet.cx <= zombie.cx - 10) and (zombie.cy-50 <= bullet.cy <= zombie.cy): # we use range
+                                bullet.hit(zombie.cx, zombie.cy) # The pea hits the zombie
+                                zombie.hp -= bullet.attack
+                                break # already hit one zombie
+                    bullet.update(app)
 
 def game_onKeyPress(app, key):
     if key == 'escape':
-        # quit()
         setActiveScreen('chapters')
+    if key == 'space':
+        app.paused = not app.paused
 
 def game_onMousePress(app, mouseX, mouseY):
 
