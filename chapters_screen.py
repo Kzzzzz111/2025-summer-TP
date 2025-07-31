@@ -10,9 +10,9 @@ def chapters_onScreenActivate(app):
 
 def chapters_redrawAll(app):
     drawLabel('Choose a level with your keyboard', app.width/2, 80, size=30, fill='white', bold=True)
-    drawLabel('1. Chapter One', 100, 150, size=20, fill='white')
-    drawLabel('2. Chapter Two', 100, 200, size=20, fill='white')
-    drawLabel('3. Chapter Three', 100, 250, size=20, fill='white')
+    drawLabel('1. Chapter One', app.width/2, 150, size=20, fill='white')
+    drawLabel('2. Chapter Two', app.width/2, 200, size=20, fill='white')
+    drawLabel('3. Chapter Three', app.width/2, 250, size=20, fill='white')
     drawLabel('Press ESC to return to the start screen', 20, app.height - 40, size=15, fill='white', align='bottom-left', opacity=60)
 
     # for debugging purposes, show the mouse coordinates
