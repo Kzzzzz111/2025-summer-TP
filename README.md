@@ -4,3 +4,17 @@
 > Name: Feifan (Kevin) Meng
 >
 > Andrew ID: kevinmen
+
+#### Implement Plants
+
+- Sunflower
+- Peashooter
+- Wall-nut
+- Snow Peashooter
+- Cherry Bomb
+
+#### Implement Zombies
+
+- Normal Zombie
+- Conehead Zombie
+- Buckethead Zombie
