@@ -1,6 +1,7 @@
 from cmu_graphics import *
-from component import *
+from component.sun import *
 from component.zombie import *
+from component.plant import *
 import random
 
 ##############################
@@ -8,22 +9,29 @@ import random
 ##############################
 
 def game_onScreenActivate(app):
-    # app.stepsPerSecond = 10 # this controls the speed of the game, 10 ticks per second
-    app.stepsPerSecond = 1000 # for debugging purposes, set to 50 ticks per second
+    app.stepsPerSecond = 20 # this controls the speed of the game, 20 ticks per second
+    # app.stepsPerSecond = 1000 # for debugging purposes, set to 50 ticks per second
 
+    app.playerLose = False  # Whether the player has lost the game
     app.sunAmount = 100  # Initial amount of sun
+    app.flowerSunAmount = 0  # Amount of sun from sunflowers
     app.timeIndex = 0
 
+    # Initialize zombies
     app.zombieTypes = ['NormalZombie', 'ConeheadZombie']
-    app.zombies = []
+    app.zombies = [] # List to hold zombies
     zombie1 = NormalZombie(app, random.choice(app.zombieTypes))
     app.zombies.append(zombie1)
 
+    # Initialize suns
+    app.suns = []  # List to hold suns
+    sun1 = Sun(app)
+    app.suns.append(sun1)
 
+    # Initialize plants
     app.holdingPlant = None  # No plant is being held initially
     app.plantTypes = ['Sunflower', 'Peashooter', 'Wallnut', 'SnowPea', 'CherryBomb']
-
-    app.playerLose = False
+    app.plants = []  # List to hold planted plants
 
 def game_redrawAll(app):
     # if chose 1
@@ -45,7 +53,6 @@ def game_redrawAll(app):
 
         # draw the seed bank
         drawImage('image/SeedBank1.png', 300, 10, height=80, align='top-left')
-
         # amount of sun
         drawLabel(f'{app.sunAmount}', 338, 76, size=15, bold=True)
 
@@ -65,16 +72,19 @@ def game_redrawAll(app):
         ##############################
         # game logic
         ##############################
-
-        # draw the zombies
-        for zombie in app.zombies:
-            if not app.playerLose:
-                zombie.draw()
-                zombie.disappear()
-            else:
-                drawRect(0, app.height//2-42, app.width, 120, fill='black', opacity=20)
-                drawLabel('The zombies have eaten your brain!', app.width//2, app.height//2-10, size=50, fill='red', bold=True, border='black', borderWidth=1)
-                drawLabel('Press ESC to return to the chapters screen', app.width//2, app.height//2 + 50, size=20, fill='white', bold=True)
+        if not app.playerLose:
+            # draw the suns
+            for sun in app.suns:
+                sun.draw()
+            # draw the zombies
+            for zombie in app.zombies:
+                if zombie.appear:
+                    zombie.draw()
+                    zombie.disappear()
+        else:
+            drawRect(0, app.height//2-42, app.width, 120, fill='black', opacity=18)
+            drawLabel('The zombies have eaten your brain!', app.width//2, app.height//2-10, size=50, fill='red', bold=True, border='black', borderWidth=1)
+            drawLabel('Press ESC to return to the chapters screen', app.width//2, app.height//2 + 50, size=20, fill='white', bold=True)
         
 
 
@@ -92,17 +102,30 @@ def game_onStep(app):
     
     if not app.playerLose:
         app.timeIndex += 1
+
         # update the zombies
         for zombie in app.zombies:
             if not zombie.success:
                 zombie.update(app)
                 zombie.move()
-        
         # generate new zombies but limit to the number of the chapter limit (20 for chapter 1)
         if len(app.zombies) < 20:
             if app.timeIndex % 200 == 0:  # Every 200 steps， 10 seconds
                 zombie = NormalZombie(app, random.choice(app.zombieTypes))
                 app.zombies.append(zombie)
+        
+        # update the suns
+        for sun in app.suns:
+            if sun.appear and sun.cy < app.height:
+                sun.update(app)
+
+                sun.move()
+            else:
+                sun.update(app)
+        # generate new suns every 300 steps
+        if app.timeIndex % 300 == 0:  # Every 300 steps, 15 seconds
+            sun = Sun(app)
+            app.suns.append(sun)
 
 
 def game_onKeyPress(app, key):
@@ -127,6 +150,12 @@ def game_onMousePress(app, mouseX, mouseY):
             app.holdingPlant = 'SnowPea'
         elif 592 <= mouseX <= 641: # Cherry Bomb
             app.holdingPlant = 'CherryBomb'
+    
+    # check if the mouse has pressed a sun
+    for sun in app.suns:
+        if sun.appear and sun.cx - 50 <= mouseX <= sun.cx + 50 and sun.cy - 50 <= mouseY <= sun.cy + 50:
+            sun.collect(app)
+            break
 
 def game_onMouseMove(app, mouseX, mouseY):
     # update the mouse coordinates in the app object
