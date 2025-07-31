@@ -9,10 +9,10 @@ class NormalZombie:
         self.appear = True
         if self.type == 'NormalZombie': # Normal Zombie
             self.imageFolder = 'image/zombies/NormalZombie/Zombie/Zombie_'
-            self.hp = 100
+            self.hp = 150
         elif self.type == 'ConeheadZombie': # Conehead Zombie
             self.imageFolder = 'image/zombies/ConeheadZombie/ConeheadZombie/ConeheadZombie_'
-            self.hp = 200
+            self.hp = 300
         self.imageIndex = 0
         self.movingSpeed = 1
         self.stop = False
@@ -35,7 +35,7 @@ class NormalZombie:
             self.dead = True
 
     def move(self):
-        if not self.stop:
+        if (not self.stop) or (not self.dead) or (not self.success): # if stop or dead, the zombie should not move
             self.cx -= self.movingSpeed
 
     # we don't remove the zombie from the list when it disappears, but we set its appear to False
