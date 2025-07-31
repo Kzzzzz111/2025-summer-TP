@@ -10,11 +10,26 @@ class Sunflower:
         self.cost = 50  # Cost to plant a sunflower
         self.hp = 100
 
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
+
     def draw(self):
         drawImage(f'image/plants/SunFlower/SunFlower_{self.imageIndex}.png', self.cx, self.cy, align='bottom')
 
     def update(self, app):
+        # death check
+        if self.hp <= 0:
+            self.appear = False
+            return
+
         self.imageIndex = (app.timeIndex//2) % 17  # Loop through the sunflower images
+
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
 
     def produceSun(self, app):
         app.flowerSunAmount += self.value  # Increase the sun amount
@@ -28,6 +43,11 @@ class PeaShooter:
         self.cost = 100  # Cost to plant a peashooter
         self.shootspeed = 2 # two shots in a second
         self.hp = 100
+
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
     
     def draw(self):
         drawImage(f'image/plants/PeaShooter/Peashooter_{self.imageIndex}.png', self.cx, self.cy, align='bottom')
@@ -35,7 +55,10 @@ class PeaShooter:
     def update(self, app):
         self.imageIndex = (app.timeIndex//2) % 12
 
-    # def shoots(self, app):
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
 
 class WallNut:
     def __init__(self, app, blockRow, blockCol):
@@ -48,11 +71,21 @@ class WallNut:
         self.hp = 900
         # self.hp = 500
         # self.hp = 200
+
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
     
     def draw(self):
         drawImage(f'{self.imageFolder}{self.imageIndex}.png', self.cx, self.cy, align='bottom')
 
     def update(self, app):
+        # death check
+        if self.hp <= 0:
+            self.appear = False
+            return
+
         if self.hp >= 600:
             self.imageIndex = (app.timeIndex//2) % 15
         elif 300 <= self.hp < 600:
@@ -61,6 +94,11 @@ class WallNut:
         elif self.hp < 300:
             self.imageFolder = 'image/plants/WallNut/WallNut_cracked2/WallNut_cracked2_'
             self.imageIndex = (app.timeIndex//2) % 14
+        
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
 
 class SnowPea:
     def __init__(self, app, blockRow, blockCol):
@@ -71,14 +109,27 @@ class SnowPea:
         self.cost = 175  # Cost to plant
         self.shootspeed = 2 # two shots in a second
         self.hp = 100
+
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
     
     def draw(self):
         drawImage(f'image/plants/SnowPea/SnowPea_{self.imageIndex}.png', self.cx, self.cy, align='bottom')
 
     def update(self, app):
+        # death check
+        if self.hp <= 0:
+            self.appear = False
+            return
+
         self.imageIndex = (app.timeIndex//2) % 14
 
-    # def shoots(self, app):
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
 
 class CherryBomb:
     def __init__(self, app, blockRow, blockCol):
@@ -90,14 +141,29 @@ class CherryBomb:
         self.shootspeed = 2 # two shots in a second
         self.hp = 100
         self.exploded = False
+
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
     
     def draw(self):
         if self.imageIndex <= 6:
             drawImage(f'image/plants/CherryBomb/CherryBomb_{self.imageIndex}.png', self.cx, self.cy, align='bottom')
 
     def update(self, app):
+        # death check
+        if self.hp <= 0:
+            self.appear = False
+            return
+
         # It will not work properly if we try to stop the image here
         # Because draw runs a bunch of illegal moves before the update function stop the image
         self.imageIndex = (app.timeIndex//10)
+
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
 
 

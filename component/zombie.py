@@ -15,24 +15,57 @@ class NormalZombie:
             self.hp = 300
         self.imageIndex = 0
         self.movingSpeed = 1
-        self.stop = False
+        self.stopped = False
         self.success = False  # Whether the zombie has reached the end of the lane
         self.dead = False
+
+        # The 4 lines below is Deepseek generated
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
+
+        # attack feature
         self.attacknum = 20
+        self.attackInterval = 20
+        self.attackCounter = 0
+        self.attackingPlant = None
+
 
     def draw(self):
         drawImage(f'{self.imageFolder}{self.imageIndex}.png', self.cx, self.cy, align='bottom')
         drawLabel(self.hp, self.cx+17, self.cy-130, fill='red', size=20, border='black', borderWidth=1)
 
     def update(self, app):
-        self.imageIndex = (app.timeIndex//2) % 21  # Loop through the zombie images
-        # change status of the zombie based on its HP
-        # if self.type == 'NormalZombie':
-        #     if self.hp <= 0:
-        #         self.appear = False
+
         if self.hp <= 0:
             self.appear = False
             self.dead = True
+
+        self.left = self.cx - 25
+        self.right = self.cx + 25
+        self.top = self.cy - 80
+        self.bottom = self.cy
+
+        if not self.dead: # update if it is not dead
+            if not self.stopped: # walking
+                if self.type == 'NormalZombie': # Normal Zombie
+                    self.imageFolder = 'image/zombies/NormalZombie/Zombie/Zombie_'
+                    self.imageIndex = (app.timeIndex//2) % 21  # Loop through the normal zombie images
+                elif self.type == 'ConeheadZombie': # Conehead Zombie
+                    self.imageFolder = 'image/zombies/ConeheadZombie/ConeheadZombie/ConeheadZombie_'
+                    self.imageIndex = (app.timeIndex//2) % 20
+            else: # attacking
+                if self.type == 'NormalZombie': # Normal Zombie
+                    self.imageFolder = 'image/zombies/NormalZombie/ZombieAttack/ZombieAttack_'
+                    self.imageIndex = (app.timeIndex//2) % 20  # Loop through the normal zombie attack images
+                elif self.type == 'ConeheadZombie': # Conehead Zombie
+                    self.imageFolder = 'image/zombies/ConeheadZombie/ConeheadZombieAttack/ConeheadZombieAttack_'
+                    self.imageIndex = (app.timeIndex//2) % 10  # Loop through the conehead zombie attack images
+                self.attackCounter += 1
+                if self.attackCounter >= self.attackInterval:
+                    self.attackPlant()
+                    self.attackCounter = 0
 
     def move(self):
         self.cx -= self.movingSpeed
@@ -42,4 +75,17 @@ class NormalZombie:
     def end(self): # if reach the end
         self.appear = False
         self.success = True
-            
+    
+    def attackPlant(self):
+        if self.attackingPlant:
+            if not self.attackingPlant.appear or self.attackingPlant.hp <= 0:
+                self.stopped = False
+                self.attackingPlant = None
+                return
+            self.attackingPlant.hp -= self.attacknum
+            # reset the zombie
+            if self.attackingPlant.hp <= 0:
+                self.attackingPlant.appear = False
+                self.stopped = False
+                self.attackingPlant = None
+    
