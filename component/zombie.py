@@ -42,3 +42,4 @@ class NormalZombie:
         if self.cx < 225:
             self.appear = False
             self.success = True
+            

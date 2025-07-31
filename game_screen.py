@@ -10,7 +10,7 @@ import random
 
 def game_onScreenActivate(app):
     app.stepsPerSecond = 20 # this controls the speed of the game, 20 ticks per second
-    # app.stepsPerSecond = 1000 # for debugging purposes, set to 50 ticks per second
+    app.stepsPerSecond = 1000 # for debugging purposes, set to 50 ticks per second
 
     app.playerLose = False  # Whether the player has lost the game
     app.sunAmount = 100  # Initial amount of sun
@@ -31,6 +31,7 @@ def game_onScreenActivate(app):
     # Initialize plants
     app.holdingPlant = None  # No plant is being held initially
     app.plantTypes = ['Sunflower', 'Peashooter', 'Wallnut', 'SnowPea', 'CherryBomb']
+    app.plantCosts = {'Sunflower':50, 'Peashooter':100, 'Wallnut':50, 'SnowPea':175, 'CherryBomb':150} # dictionary to hold the costs of each plant
     app.plants = []  # List to hold planted plants
 
 def game_redrawAll(app):
@@ -40,7 +41,7 @@ def game_redrawAll(app):
         drawImage('image/background/Background_noRoad.jpg', 0, 0, align='top-left')
         
         # top-left message
-        drawRect(10, 10, 282, 72, fill='black', opacity=60)
+        drawRect(10, 10, 282, 70, fill='black', opacity=60)
         drawLabel(f'Chapter {app.selectedChapter}', 20, 20, align='top-left', size=30, fill='white', bold=True, border='black', borderWidth=1)
         drawLabel(f'Remaining zombies: {20 - len(app.zombies)}', 20, 52, align='top-left', size=24, fill='white', bold=True, border='black', borderWidth=1)
         
@@ -56,18 +57,26 @@ def game_redrawAll(app):
         # amount of sun
         drawLabel(f'{app.sunAmount}', 338, 76, size=15, bold=True)
 
-        # dropping plants in hand
+        # dropping plants button
         drawRect(690, 50, 60, 40, align='center', fill='red', opacity=40)
         drawRect(690, 50, 60, 40, align='center', fill=None, border='black', borderWidth=3, opacity=70)
         drawLabel('DROP', 690, 50, size=15, fill='white', bold=True)
 
         # print the holding plant
-        drawRect(10, 110, 282, 40, align='left', fill='black', opacity=60)
+        drawRect(10, 120, 282, 40, align='left', fill='black', opacity=60)
         if app.holdingPlant:
-            drawLabel(f'HOLDING: {app.holdingPlant}', 20, 110, align='left',fill='white', size=20, bold=True, border='black', borderWidth=1)
+            drawLabel(f'HOLDING: {app.holdingPlant}', 20, 120, align='left',fill='white', size=20, bold=True, border='black', borderWidth=1)
             drawCircle(app.mouseX, app.mouseY, 15, fill='white', opacity=70)
         else:
-            drawLabel('HOLDING: None', 20, 110, align='left', fill='white', size=20, bold=True, border='black', borderWidth=1)
+            drawLabel('HOLDING: None', 20, 120, align='left', fill='white', size=20, bold=True, border='black', borderWidth=1)
+
+        # print sun from sunflowers
+        drawRect(10, 165, 282, 40, align='left', fill='black', opacity=60)
+        drawLabel(f'Sun from Sunflowers: {app.flowerSunAmount}', 20, 165, align='left', fill='white', size=15, bold=True, border='black', borderWidth=1)
+        # draw the collect button
+        drawRect(282, 165, 81, 25, align='right', fill='red', opacity=60, border='white', borderWidth=1)
+        drawLabel('COLLECT', 277, 165, align='right', size=15, fill='white', bold=True)
+
 
         ##############################
         # game logic
@@ -81,6 +90,9 @@ def game_redrawAll(app):
                 if zombie.appear:
                     zombie.draw()
                     zombie.disappear()
+            # draw the plants
+            for plant in app.plants:
+                plant.draw()
         else:
             drawRect(0, app.height//2-42, app.width, 120, fill='black', opacity=18)
             drawLabel('The zombies have eaten your brain!', app.width//2, app.height//2-10, size=50, fill='red', bold=True, border='black', borderWidth=1)
@@ -93,7 +105,7 @@ def game_redrawAll(app):
         drawLabel('Please wait for the coming new version!', app.width//2, app.height//2+15, size=30, fill='white', bold=True, border='black', borderWidth=1)
         drawLabel('Press ESC to go back', app.width//2, app.height//2+45, size=30, fill='white', bold=True, border='black', borderWidth=1)
 
-def game_onStep(app):
+def game_onStep(app): # instructions in each tick
     # check if the player has lost
     for zombie in app.zombies:
         if zombie.success:
@@ -116,9 +128,8 @@ def game_onStep(app):
         
         # update the suns
         for sun in app.suns:
-            if sun.appear and sun.cy < app.height:
+            if sun.appear and sun.cy < app.height: # still falling
                 sun.update(app)
-
                 sun.move()
             else:
                 sun.update(app)
@@ -127,6 +138,13 @@ def game_onStep(app):
             sun = Sun(app)
             app.suns.append(sun)
 
+        # update the plants
+        for plant in app.plants:
+            plant.update(app)
+            if isinstance(plant, Sunflower):
+                # Sunflowers produce sun every 250 steps, 12.5 seconds
+                if app.timeIndex % 250 == 0: 
+                    plant.produceSun(app)
 
 def game_onKeyPress(app, key):
     if key == 'escape':
@@ -134,30 +152,75 @@ def game_onKeyPress(app, key):
         setActiveScreen('chapters')
 
 def game_onMousePress(app, mouseX, mouseY):
-    # check if the mouse has pressed the drop button
-    if 690 - 30 <= mouseX <= 690 + 30 and 50 - 20 <= mouseY <= 50 + 20:
-        app.holdingPlant = None  # Drop the plant in hand
 
-    # check if the mouse has pressed a plant in the seed bank
-    if 20 <= mouseY <= 85:
-        if 380 <= mouseX <= 430: # Sunflower
-            app.holdingPlant = 'Sunflower'
-        elif 432 <= mouseX <= 482: # Peashooter
-            app.holdingPlant = 'Peashooter'
-        elif 487 <= mouseX <= 535: # Wallnut
-            app.holdingPlant = 'Wallnut'
-        elif 539 <= mouseX <= 589: # Snow Pea
-            app.holdingPlant = 'SnowPea'
-        elif 592 <= mouseX <= 641: # Cherry Bomb
-            app.holdingPlant = 'CherryBomb'
-    
-    # check if the mouse has pressed a sun
+    if app.holdingPlant is None:  # we are not holding a plant
+        # check if the mouse is on the seed bank
+        if 20 <= mouseY <= 85: # Seed bank area
+            if 380 <= mouseX <= 430: # Sunflower
+                app.holdingPlant = 'Sunflower'
+            elif 432 <= mouseX <= 482: # Peashooter
+                app.holdingPlant = 'Peashooter'
+            elif 487 <= mouseX <= 535: # Wallnut
+                app.holdingPlant = 'Wallnut'
+            elif 539 <= mouseX <= 589: # Snow Pea
+                app.holdingPlant = 'SnowPea'
+            elif 592 <= mouseX <= 641: # Cherry Bomb
+                app.holdingPlant = 'CherryBomb'
+
+    else: # we are holding a plant
+        # check if the mouse has pressed the drop button
+        if 690 - 30 <= mouseX <= 690 + 30 and 50 - 20 <= mouseY <= 50 + 20:
+            app.holdingPlant = None  # Drop the plant in hand
+        # check if the mouse has pressed a plant on the lawn
+        blockRow, blockCol = game_checkBlock(app, mouseX, mouseY)
+        if (blockRow is not None) and (blockCol is not None): # we are pointing at a block
+            # Check if the player has enough sun to plant
+            if app.plantCosts[app.holdingPlant] <= app.sunAmount:
+                # Create a new plant based on the holding plant type
+                if app.holdingPlant == 'Sunflower':
+                    newPlant = Sunflower(app, blockRow, blockCol)
+                # elif app.holdingPlant == 'Peashooter':
+                #     newPlant = Peashooter(app, blockRow, blockCol)
+                # elif app.holdingPlant == 'Wallnut':
+                #     newPlant = Wallnut(app, blockRow, blockCol)
+                # elif app.holdingPlant == 'SnowPea':
+                #     newPlant = SnowPea(app, blockRow, blockCol)
+                # elif app.holdingPlant == 'CherryBomb':
+                #     newPlant = CherryBomb(app, blockRow, blockCol)
+
+                # deduct the sun cost of the plant
+                app.sunAmount -= app.plantCosts[app.holdingPlant]
+                # drop the holding plant
+                app.holdingPlant = None  # Reset the holding plant
+                # Add the new plant to the plants list
+                app.plants.append(newPlant)
+
+    # collect a sun
     for sun in app.suns:
         if sun.appear and sun.cx - 50 <= mouseX <= sun.cx + 50 and sun.cy - 50 <= mouseY <= sun.cy + 50:
             sun.collect(app)
             break
+    
+    # collet sun from sunflower
+    if (201 <= mouseX <= 282) and (145 <= mouseY <= 185): # we are clicking the collect button
+        game_collectFlowerSun(app)
 
 def game_onMouseMove(app, mouseX, mouseY):
     # update the mouse coordinates in the app object
     app.mouseX = mouseX
     app.mouseY = mouseY
+
+def game_checkBlock(app, mouseX, mouseY):
+    # Check if the mouse is on a block
+    for i in range(len(app.board)):
+        for j in range(len(app.board[i])):
+            midX, midY = app.board[i][j]
+            if midX - 50 <= mouseX <= midX + 50 and midY - 50 <= mouseY <= midY + 50:
+                return i, j
+    return None, None
+
+def game_collectFlowerSun(app):
+    # Collect the sun from the sunflower
+    if app.flowerSunAmount > 0:
+        app.sunAmount += app.flowerSunAmount
+        app.flowerSunAmount = 0  # Reset the flower sun amount after collecting
